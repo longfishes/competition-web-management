@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.longfish.mapper.UserMapper">
+    <insert id="addUser">
+        insert into user
+        (username,
+        <if test="password != null">password,</if>
+        organization,
+        update_time,
+        regis_time,
+        type
+        <if test="signature != null">,signature</if>
+        )
+        values
+        (#{username}, <if test="password != null">#{password},</if> #{organization}, now(), now(), #{type}
+        <if test="signature != null">,#{signature}</if>)
+    </insert>
+    <update id="updateDetails">
+        update user
+        set username = #{username},
+        <if test="newPassword != null">password = #{newPassword},</if>
+        organization = #{organization},
+        type = #{type},
+        update_time = now()
+        <if test="signature != null">,signature = #{signature}</if>
+        where id = #{id}
+    </update>
+    <delete id="drop">
+        delete
+        from user
+        where id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+
+    <select id="getByUserNameAndPassword" resultType="com.longfish.pojo.User">
+        select *
+        from user
+        where username = #{username}
+          and password = #{password}
+    </select>
+    <select id="list" resultType="com.longfish.pojo.User">
+        select * from user <if test="id != null">where id = #{id}</if>
+    </select>
+    <select id="getUserByName" resultType="com.longfish.pojo.User">
+        select * from user where username = #{username}
+    </select>
+</mapper>

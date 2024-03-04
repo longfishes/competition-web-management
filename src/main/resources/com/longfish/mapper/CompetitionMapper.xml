@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.longfish.mapper.CompetitionMapper">
+    <insert id="add">
+        insert into competition(cop_name,
+                                info,
+                                organizers,
+                                type,
+                                limitation,
+                                participated,
+                                start_date,
+                                end_date,
+                                cop_status)
+        values (#{copName},
+                #{info},
+                #{organizers},
+                #{type},
+                #{limitation},
+                0,
+                #{startDate},
+                #{endDate},
+                if(datediff(end_date, now()) &lt; 0, 3, if(datediff(start_date, now()) > 0, 1, 2)))
+    </insert>
+    <update id="update">
+        update competition
+        set cop_name = #{copName},
+        info = #{info},
+        organizers = #{organizers},
+        <if test="type != null">
+            type = #{type},
+        </if>
+        limitation = #{limitation},
+        start_date = #{startDate},
+        end_date = #{endDate},
+        cop_status = if(datediff(#{endDate}, now()) &lt; 0, 3, if(datediff(#{startDate}, now()) > 0, 1, 2))
+        where id = #{id}
+    </update>
+
+    <delete id="delete">
+        delete
+        from competition
+        where id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="list" resultType="com.longfish.pojo.Competition">
+        select *
+        from competition
+        <where>
+            <if test="copName != null and copName != ''">
+                and cop_name like concat('%', #{copName}, '%')
+            </if>
+            <if test="type != null">
+                and type = #{type}
+            </if>
+            <if test="isFull == 1">
+                and participated &lt; limitation
+            </if>
+            <if test="isFull == 2">
+                and participated = limitation
+            </if>
+            <if test="date != null">
+                and (#{date} between start_date and end_date) or (#{date} = start_date) or (#{date} = end_date)
+            </if>
+        </where>
+        <if test="order == 1">order by participated desc</if>
+        <if test="order == 2">order by participated</if>
+        <if test="order == 3">order by start_date desc</if>
+        <if test="order == 4">order by end_date</if>
+    </select>
+    <select id="getCopByUsername" resultType="com.longfish.pojo.Competition">
+        select *
+        from competition
+        where id in (select cop_id from signs where username = #{username})
+    </select>
+
+
+</mapper>
